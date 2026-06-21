@@ -1,0 +1,1322 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="google-signin-client_id" content="31530157788-ssr39h9tuo8qsl6inl77tmatpg4q0oeh.apps.googleusercontent.com">
+<script src="https://accounts.google.com/gsi/client" async defer></script>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Auto Blue — Daily Operations</title>
+<style>
+  :root {
+    --blue: #1a6bcc;
+    --blue-light: #e8f1fb;
+    --blue-mid: #3d8fef;
+    --dark: #0f1923;
+    --surface: #ffffff;
+    --surface2: #f4f7fb;
+    --border: rgba(26,107,204,0.15);
+    --text: #0f1923;
+    --text2: #4a5568;
+    --text3: #8a9ab5;
+    --green: #0d9e6e;
+    --green-light: #e6f7f2;
+    --amber: #c47f17;
+    --amber-light: #fdf3e0;
+    --red: #c0392b;
+    --red-light: #fdecea;
+    --radius: 10px;
+    --radius-lg: 16px;
+    --shadow: 0 1px 3px rgba(15,25,35,0.08);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    background: var(--surface2);
+    color: var(--text);
+    min-height: 100vh;
+  }
+  /* Header */
+  .header {
+    background: var(--dark);
+    padding: 0 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 56px;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+  .logo {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    text-decoration: none;
+  }
+  .logo-icon {
+    width: 32px;
+    height: 32px;
+    background: var(--blue);
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .logo-icon svg { width: 18px; height: 18px; fill: white; }
+  .logo-name { font-size: 16px; font-weight: 600; color: white; letter-spacing: -0.01em; }
+  .logo-name span { color: var(--blue-mid); }
+  .header-date { font-size: 12px; color: rgba(255,255,255,0.5); }
+
+  /* Nav tabs */
+  .nav {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    overflow-x: auto;
+    scrollbar-width: none;
+    padding: 0 16px;
+    position: sticky;
+    top: 56px;
+    z-index: 99;
+  }
+  .nav::-webkit-scrollbar { display: none; }
+  .nav-tab {
+    flex-shrink: 0;
+    padding: 14px 16px 12px;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text3);
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+    transition: all 0.15s;
+    white-space: nowrap;
+    background: none;
+    border-top: none;
+    border-left: none;
+    border-right: none;
+  }
+  .nav-tab.active { color: var(--blue); border-bottom-color: var(--blue); }
+  .nav-tab:hover:not(.active) { color: var(--text2); }
+
+  /* Pages */
+  .page { display: none; padding: 20px 16px 80px; max-width: 640px; margin: 0 auto; }
+  .page.active { display: block; }
+
+  /* Cards */
+  .card {
+    background: var(--surface);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow);
+    padding: 16px 18px;
+    margin-bottom: 14px;
+  }
+  .card-title {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--text3);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    margin-bottom: 14px;
+  }
+
+  /* Metric grid */
+  .metrics { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 14px; }
+  .metric {
+    background: var(--surface);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    padding: 14px;
+  }
+  .metric-label { font-size: 11px; color: var(--text3); margin-bottom: 6px; font-weight: 500; }
+  .metric-value { font-size: 22px; font-weight: 600; color: var(--text); letter-spacing: -0.02em; }
+  .metric-sub { font-size: 11px; color: var(--text3); margin-top: 3px; }
+  .metric.accent { background: var(--blue); }
+  .metric.accent .metric-label { color: rgba(255,255,255,0.65); }
+  .metric.accent .metric-value { color: white; }
+  .metric.accent .metric-sub { color: rgba(255,255,255,0.55); }
+
+  /* Progress */
+  .prog-wrap { height: 6px; background: var(--surface2); border-radius: 3px; overflow: hidden; margin: 8px 0 4px; }
+  .prog-fill { height: 100%; border-radius: 3px; transition: width 0.4s ease; }
+
+  /* Checklist */
+  .checklist { list-style: none; }
+  .checklist li {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 11px 0;
+    border-bottom: 1px solid var(--border);
+    cursor: pointer;
+    transition: opacity 0.2s;
+  }
+  .checklist li:last-child { border-bottom: none; }
+  .checklist li.done { opacity: 0.45; }
+  .checklist li.done .item-en { text-decoration: line-through; }
+  .check-box {
+    width: 20px;
+    height: 20px;
+    border-radius: 6px;
+    border: 1.5px solid var(--border);
+    flex-shrink: 0;
+    margin-top: 1px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.15s;
+    background: var(--surface);
+  }
+  .checklist li.done .check-box {
+    background: var(--blue);
+    border-color: var(--blue);
+  }
+  .check-box svg { display: none; width: 12px; height: 12px; fill: none; stroke: white; stroke-width: 2.5; }
+  .checklist li.done .check-box svg { display: block; }
+  .item-en { font-size: 14px; color: var(--text); line-height: 1.4; }
+  .item-th { font-size: 12px; color: var(--text3); margin-top: 2px; }
+
+  /* Alerts */
+  .alert {
+    border-radius: var(--radius);
+    padding: 11px 14px;
+    font-size: 13px;
+    line-height: 1.5;
+    margin-bottom: 12px;
+    display: flex;
+    gap: 10px;
+    align-items: flex-start;
+  }
+  .alert-icon { font-size: 16px; flex-shrink: 0; margin-top: 1px; }
+  .alert.danger { background: var(--red-light); color: #8b1a10; border-left: 3px solid var(--red); border-radius: 0 var(--radius) var(--radius) 0; }
+  .alert.warning { background: var(--amber-light); color: #7a4f0a; border-left: 3px solid var(--amber); border-radius: 0 var(--radius) var(--radius) 0; }
+  .alert.info { background: var(--blue-light); color: #1a4a8a; border-left: 3px solid var(--blue); border-radius: 0 var(--radius) var(--radius) 0; }
+
+  /* Step grid */
+  .step-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 8px; margin: 10px 0; }
+  .step-card {
+    background: var(--surface2);
+    border-radius: var(--radius);
+    padding: 10px 12px;
+  }
+  .step-num { font-size: 10px; color: var(--text3); font-weight: 600; text-transform: uppercase; margin-bottom: 4px; }
+  .step-en { font-size: 13px; font-weight: 500; color: var(--text); }
+  .step-th { font-size: 11px; color: var(--text3); margin-top: 2px; }
+
+  /* Table rows */
+  .row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--border);
+    font-size: 14px;
+  }
+  .row:last-child { border-bottom: none; }
+  .row-label { color: var(--text2); }
+  .row-value { font-weight: 500; color: var(--text); }
+
+  /* Daily entry table */
+  .day-table { width: 100%; border-collapse: collapse; }
+  .day-table th {
+    font-size: 11px;
+    color: var(--text3);
+    font-weight: 600;
+    text-transform: uppercase;
+    padding: 0 4px 10px;
+    text-align: right;
+  }
+  .day-table th:first-child { text-align: left; }
+  .day-table td { padding: 6px 4px; border-bottom: 1px solid var(--border); vertical-align: middle; }
+  .day-table tr:last-child td { border-bottom: none; }
+  .day-table td:first-child { font-size: 13px; font-weight: 500; color: var(--text); }
+  .day-table input {
+    width: 100%;
+    text-align: right;
+    font-size: 13px;
+    padding: 5px 6px;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    background: var(--surface2);
+    color: var(--text);
+    font-family: inherit;
+    -moz-appearance: textfield;
+  }
+  .day-table input::-webkit-inner-spin-button { -webkit-appearance: none; }
+  .day-table input:focus { outline: none; border-color: var(--blue); background: var(--surface); }
+  .day-label { display: flex; flex-direction: column; }
+  .day-badge { font-size: 10px; color: var(--blue); font-weight: 600; }
+  .row-total { font-size: 13px; font-weight: 500; text-align: right; color: var(--text2); }
+
+  /* Buttons */
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 10px 18px;
+    border-radius: var(--radius);
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    border: none;
+    transition: all 0.15s;
+    font-family: inherit;
+  }
+  .btn-primary { background: var(--blue); color: white; }
+  .btn-primary:hover { background: #1558b0; }
+  .btn-ghost { background: var(--surface2); color: var(--text2); border: 1px solid var(--border); }
+  .btn-ghost:hover { background: var(--border); }
+  .btn-full { width: 100%; justify-content: center; }
+  .btn-sm { padding: 7px 12px; font-size: 12px; }
+
+  /* Log table */
+  .log-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  .log-table th { font-size: 11px; color: var(--text3); font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; padding: 0 8px 10px; text-align: left; }
+  .log-table td { padding: 10px 8px; border-bottom: 1px solid var(--border); color: var(--text2); }
+  .log-table tr:last-child td { border-bottom: none; }
+  .log-table .total-cell { font-weight: 600; color: var(--text); }
+  .empty-log { text-align: center; padding: 40px 20px; color: var(--text3); font-size: 14px; }
+
+  /* Status badge */
+  .status-badge {
+    display: inline-block;
+    font-size: 11px;
+    font-weight: 600;
+    padding: 3px 8px;
+    border-radius: 20px;
+  }
+  .status-good { background: var(--green-light); color: var(--green); }
+  .status-warn { background: var(--amber-light); color: var(--amber); }
+  .status-bad { background: var(--red-light); color: var(--red); }
+
+  /* Toast */
+  .toast {
+    position: fixed;
+    bottom: 24px;
+    left: 50%;
+    transform: translateX(-50%) translateY(80px);
+    background: var(--dark);
+    color: white;
+    font-size: 13px;
+    padding: 10px 18px;
+    border-radius: 20px;
+    transition: transform 0.25s ease;
+    z-index: 999;
+    white-space: nowrap;
+  }
+  .toast.show { transform: translateX(-50%) translateY(0); }
+
+  /* Contacts */
+  .contact-card {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 0;
+    border-bottom: 1px solid var(--border);
+  }
+  .contact-card:last-child { border-bottom: none; }
+  .contact-avatar {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: var(--blue-light);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--blue);
+    flex-shrink: 0;
+  }
+  .contact-name { font-size: 14px; font-weight: 500; }
+  .contact-role { font-size: 12px; color: var(--text3); }
+  .contact-phone { font-size: 13px; color: var(--blue); margin-left: auto; }
+
+  /* Colour swatches */
+  .swatch { width: 14px; height: 14px; border-radius: 50%; display: inline-block; flex-shrink: 0; }
+
+  /* Section heading */
+  .section-h { font-size: 13px; font-weight: 600; color: var(--text); margin: 18px 0 10px; }
+
+  /* Select */
+  select {
+    font-size: 13px;
+    padding: 6px 10px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    background: var(--surface);
+    color: var(--text);
+    font-family: inherit;
+    cursor: pointer;
+  }
+
+  .page-title { font-size: 20px; font-weight: 700; color: var(--text); margin-bottom: 18px; letter-spacing: -0.02em; }
+
+  .unconfirmed { color: var(--amber); font-size: 12px; }
+  .pay-method-btn {
+    flex: 1;
+    padding: 8px 12px;
+    border-radius: var(--radius);
+    border: 1px solid var(--border);
+    background: var(--surface2);
+    color: var(--text2);
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.15s;
+    font-family: inherit;
+  }
+  .pay-method-btn.active {
+    background: var(--blue);
+    color: white;
+    border-color: var(--blue);
+  }
+  .exp-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--border);
+    font-size: 13px;
+  }
+  .exp-row:last-child { border-bottom: none; }
+  .exp-cat { font-weight: 500; color: var(--text); }
+  .exp-meta { font-size: 11px; color: var(--text3); margin-top: 2px; }
+  .exp-amount { font-weight: 600; color: var(--red); flex-shrink: 0; margin-left: 12px; }
+  .exp-del { background: none; border: none; color: var(--text3); cursor: pointer; font-size: 16px; padding: 0 4px; margin-left: 6px; }
+
+  /* ── Auth overlay ── */
+  #auth-overlay {
+    position: fixed; inset: 0; z-index: 9999;
+    background: var(--dark);
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    gap: 24px; padding: 32px;
+  }
+  #auth-overlay.hidden { display: none; }
+  .auth-logo {
+    display: flex; align-items: center; gap: 12px; margin-bottom: 8px;
+  }
+  .auth-logo-icon {
+    width: 48px; height: 48px; background: var(--blue);
+    border-radius: 12px; display: flex; align-items: center; justify-content: center;
+  }
+  .auth-logo-icon svg { width: 26px; height: 26px; fill: white; }
+  .auth-logo-name { font-size: 28px; font-weight: 700; color: white; letter-spacing: -0.02em; }
+  .auth-logo-name span { color: #3d8fef; }
+  .auth-tagline { font-size: 14px; color: rgba(255,255,255,0.5); text-align: center; }
+  .auth-card {
+    background: white; border-radius: 16px; padding: 28px 24px;
+    display: flex; flex-direction: column; align-items: center; gap: 16px;
+    width: 100%; max-width: 320px;
+  }
+  .auth-card-title { font-size: 15px; font-weight: 600; color: #0f1923; }
+  .auth-card-sub { font-size: 13px; color: #666; text-align: center; line-height: 1.5; }
+  .auth-error {
+    font-size: 13px; color: #c0392b; text-align: center;
+    background: #fdecea; border-radius: 8px; padding: 10px 14px;
+    display: none; width: 100%;
+  }
+  .auth-user {
+    position: fixed; top: 0; right: 0; z-index: 200;
+    display: flex; align-items: center; gap: 8px;
+    padding: 8px 12px;
+  }
+  .auth-avatar {
+    width: 28px; height: 28px; border-radius: 50%;
+    border: 2px solid rgba(255,255,255,0.3);
+    cursor: pointer; object-fit: cover;
+  }
+  .auth-signout {
+    font-size: 11px; color: rgba(255,255,255,0.5);
+    background: none; border: none; cursor: pointer;
+    font-family: inherit; padding: 0;
+  }
+  .auth-signout:hover { color: rgba(255,255,255,0.8); }
+</style>
+</head>
+<body>
+
+<!-- Auth overlay -->
+<div id="auth-overlay">
+  <div class="auth-logo">
+    <div class="auth-logo-icon">
+      <svg viewBox="0 0 24 24"><path d="M3 17h18M5 17V9l7-5 7 5v8M9 17v-5h6v5"/></svg>
+    </div>
+    <span class="auth-logo-name">Auto<span>Blue</span></span>
+  </div>
+  <div class="auth-tagline">Operations &amp; finance management</div>
+  <div class="auth-card">
+    <div class="auth-card-title">Sign in to continue</div>
+    <div class="auth-card-sub">Use your authorised Google account to access Auto Blue.</div>
+    <div id="g_id_onload"
+      data-client_id="31530157788-ssr39h9tuo8qsl6inl77tmatpg4q0oeh.apps.googleusercontent.com"
+      data-callback="handleGoogleSignIn"
+      data-auto_select="true"
+      data-itp_support="true">
+    </div>
+    <div class="g_id_signin"
+      data-type="standard"
+      data-size="large"
+      data-theme="outline"
+      data-text="sign_in_with"
+      data-shape="rectangular"
+      data-logo_alignment="left">
+    </div>
+    <div class="auth-error" id="auth-error">
+      This Google account is not authorised to access Auto Blue.<br>
+      Please use autoblue.chiangmai@gmail.com or bt.pratt@gmail.com.
+    </div>
+  </div>
+</div>
+
+<!-- Signed-in user indicator -->
+<div class="auth-user" id="auth-user" style="display:none">
+  <img class="auth-avatar" id="auth-avatar" src="" alt="profile">
+  <button class="auth-signout" onclick="signOut()">Sign out</button>
+</div>
+
+<header class="header">
+  <a class="logo" href="#">
+    <div class="logo-icon">
+      <svg viewBox="0 0 24 24"><path d="M3 17h18M5 17V9l7-5 7 5v8M9 17v-5h6v5"/></svg>
+    </div>
+    <span class="logo-name">Auto<span>Blue</span></span>
+  </a>
+  <span class="header-date" id="header-date"></span>
+</header>
+
+<nav class="nav">
+  <button class="nav-tab active" onclick="showPage('open')">Opening</button>
+  <button class="nav-tab" onclick="showPage('wash')">Wash</button>
+  <button class="nav-tab" onclick="showPage('tracker')">Tracker</button>
+  <button class="nav-tab" onclick="showPage('log')">Log</button>
+  <button class="nav-tab" onclick="showPage('close')">Closing</button>
+  <button class="nav-tab" onclick="showPage('expenses')">Expenses</button>
+  <button class="nav-tab" onclick="showPage('contacts')">Contacts</button>
+</nav>
+
+<!-- OPENING -->
+<div class="page active" id="page-open">
+  <p class="page-title">Good morning ☀️</p>
+  <div class="metrics">
+    <div class="metric accent">
+      <div class="metric-label">Break-even target</div>
+      <div class="metric-value">฿20,400</div>
+      <div class="metric-sub">per week</div>
+    </div>
+    <div class="metric">
+      <div class="metric-label">Today</div>
+      <div class="metric-value" id="open-today-date">—</div>
+      <div class="metric-sub" id="open-today-day">—</div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Opening checklist — 8:00 AM
+      <button class="btn btn-ghost btn-sm" style="float:right;margin-top:-4px" onclick="resetList('ol')">Reset</button>
+    </div>
+    <div style="margin-bottom:10px">
+      <div class="prog-wrap"><div class="prog-fill" id="ol-prog" style="width:0%;background:var(--blue)"></div></div>
+      <div style="font-size:11px;color:var(--text3)" id="ol-label">0 of 10 complete</div>
+    </div>
+    <ul class="checklist" id="ol">
+      <li onclick="toggle(this,'ol','ol-prog','ol-label',10)"><div class="check-box"><svg viewBox="0 0 12 12"><polyline points="2,6 5,9 10,3"/></svg></div><div><div class="item-en">Unlock and open shutter gate</div><div class="item-th">เปิดประตูม้วน</div></div></li>
+      <li onclick="toggle(this,'ol','ol-prog','ol-label',10)"><div class="check-box"><svg viewBox="0 0 12 12"><polyline points="2,6 5,9 10,3"/></svg></div><div><div class="item-en">Turn on main power at electrical box</div><div class="item-th">เปิดไฟหลักที่ตู้ไฟ</div></div></li>
+      <li onclick="toggle(this,'ol','ol-prog','ol-label',10)"><div class="check-box"><svg viewBox="0 0 12 12"><polyline points="2,6 5,9 10,3"/></svg></div><div><div class="item-en">Turn on water supply — check pressure</div><div class="item-th">เปิดน้ำ — ตรวจแรงดัน</div></div></li>
+      <li onclick="toggle(this,'ol','ol-prog','ol-label',10)"><div class="check-box"><svg viewBox="0 0 12 12"><polyline points="2,6 5,9 10,3"/></svg></div><div><div class="item-en">Start machine — run 1 dry test pass</div><div class="item-th">เดินเครื่องทดสอบ 1 รอบ</div></div></li>
+      <li onclick="toggle(this,'ol','ol-prog','ol-label',10)"><div class="check-box"><svg viewBox="0 0 12 12"><polyline points="2,6 5,9 10,3"/></svg></div><div><div class="item-en">Check chemicals — refill if under ⅓</div><div class="item-th">ตรวจน้ำยา — เติมถ้าเหลือน้อยกว่า ⅓</div></div></li>
+      <li onclick="toggle(this,'ol','ol-prog','ol-label',10)"><div class="check-box"><svg viewBox="0 0 12 12"><polyline points="2,6 5,9 10,3"/></svg></div><div><div class="item-en">Prepare towels — separate by colour</div><div class="item-th">เตรียมผ้าเช็ด — แยกสีตามตำแหน่ง</div></div></li>
+      <li onclick="toggle(this,'ol','ol-prog','ol-label',10)"><div class="check-box"><svg viewBox="0 0 12 12"><polyline points="2,6 5,9 10,3"/></svg></div><div><div class="item-en">Place QR payment sign at entrance</div><div class="item-th">วางป้าย QR รับเงินที่ทางเข้า</div></div></li>
+      <li onclick="toggle(this,'ol','ol-prog','ol-label',10)"><div class="check-box"><svg viewBox="0 0 12 12"><polyline points="2,6 5,9 10,3"/></svg></div><div><div class="item-en">Check vacuum cleaner works</div><div class="item-th">ตรวจเครื่องดูดฝุ่น</div></div></li>
+      <li onclick="toggle(this,'ol','ol-prog','ol-label',10)"><div class="check-box"><svg viewBox="0 0 12 12"><polyline points="2,6 5,9 10,3"/></svg></div><div><div class="item-en">Note opening cash float in logbook</div><div class="item-th">บันทึกเงินเปิดร้านในสมุด</div></div></li>
+      <li onclick="toggle(this,'ol','ol-prog','ol-label',10)"><div class="check-box"><svg viewBox="0 0 12 12"><polyline points="2,6 5,9 10,3"/></svg></div><div><div class="item-en">Record staff on duty today</div><div class="item-th">บันทึกพนักงานวันนี้</div></div></li>
+    </ul>
+  </div>
+</div>
+
+<!-- WASH -->
+<div class="page" id="page-wash">
+  <p class="page-title">Wash procedure</p>
+
+  <div class="alert danger"><span class="alert-icon">⛔</span><div><strong>2-metre height limit.</strong> Check every vehicle before entry. Oversized vehicles will damage the gantry arm.<br><span style="font-size:12px">ห้ามรถสูงเกิน 2 เมตร — ตรวจทุกคัน</span></div></div>
+  <div class="alert danger"><span class="alert-icon">🔴</span><div><strong>Red stop button</strong> is inside the back door. Engage whenever staff are in the drying area — curtain can drop and injure staff.<br><span style="font-size:12px">ปุ่มหยุดฉุกเฉินอยู่ที่ประตูหลัง — กดทุกครั้งที่พนักงานเข้าพื้นที่เป่าแห้ง</span></div></div>
+
+  <div class="section-h">Step-by-step</div>
+  <div class="step-grid">
+    <div class="step-card"><div class="step-num">Step 1</div><div class="step-en">Check height & type</div><div class="step-th">ตรวจขนาดรถ</div></div>
+    <div class="step-card"><div class="step-num">Step 2</div><div class="step-en">Collect payment</div><div class="step-th">รับชำระเงิน</div></div>
+    <div class="step-card"><div class="step-num">Step 3</div><div class="step-en">Pre-spray soap</div><div class="step-th">ฉีดน้ำยาก่อน</div></div>
+    <div class="step-card"><div class="step-num">Step 4</div><div class="step-en">Guide car in</div><div class="step-th">นำรถเข้าเครื่อง</div></div>
+    <div class="step-card"><div class="step-num">Step 5</div><div class="step-en">Park P + e-brake</div><div class="step-th">เกียร์ P ดึงเบรกมือ</div></div>
+    <div class="step-card"><div class="step-num">Step 6</div><div class="step-en">Select mode & start</div><div class="step-th">เลือกโหมด กด start</div></div>
+    <div class="step-card"><div class="step-num">Step 7</div><div class="step-en">Machine dries car</div><div class="step-th">เครื่องเป่าแห้ง</div></div>
+    <div class="step-card"><div class="step-num">Step 8</div><div class="step-en">Blow-down & wipe</div><div class="step-th">เป่า + เช็ดด้วยผ้า</div></div>
+    <div class="step-card"><div class="step-num">Step 9</div><div class="step-en">Clean wheels</div><div class="step-th">ล้างล้อ</div></div>
+    <div class="step-card"><div class="step-num">Step 10</div><div class="step-en">Offer interior clean</div><div class="step-th">เสนอทำภายใน</div></div>
+  </div>
+
+  <div class="section-h">Pricing</div>
+  <div class="card">
+    <div class="row"><span class="row-label">Standard — top & sides</span><span class="row-value">฿99 small &nbsp;·&nbsp; ฿? large</span></div>
+    <div class="row"><span class="row-label">Fine — includes underbody</span><span class="row-value">฿? small &nbsp;·&nbsp; ฿? large</span></div>
+    <div class="row"><span class="row-label">Interior — vacuum + mats</span><span class="row-value">฿? <span class="unconfirmed">confirm</span></span></div>
+  </div>
+
+  <div class="section-h">Towel colour code</div>
+  <div class="card">
+    <div class="row"><span class="row-label" style="display:flex;align-items:center;gap:8px"><span class="swatch" style="background:#e24b4a"></span> Red</span><span class="row-value">Body panels</span></div>
+    <div class="row"><span class="row-label" style="display:flex;align-items:center;gap:8px"><span class="swatch" style="background:#2980b9"></span> Blue</span><span class="row-value">Windows & mirrors</span></div>
+    <div class="row"><span class="row-label" style="display:flex;align-items:center;gap:8px"><span class="swatch" style="background:#0d9e6e"></span> Green</span><span class="row-value">Wheels & tyres</span></div>
+    <div class="row"><span class="row-label" style="display:flex;align-items:center;gap:8px"><span class="swatch" style="background:#888"></span> Grey</span><span class="row-value">Interior & mats</span></div>
+  </div>
+
+  <div class="alert warning"><span class="alert-icon">⚠️</span><div>Warn customers with older cars about loose trim, mirrors, or aerials before entering the machine.<br><span style="font-size:12px">แจ้งลูกค้ารถเก่าเรื่องชิ้นส่วนที่หลวม</span></div></div>
+</div>
+
+<!-- TRACKER -->
+<div class="page" id="page-tracker">
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+    <p class="page-title" style="margin:0">Daily entry</p>
+    <span id="tracker-date" style="font-size:13px;color:var(--text3);font-weight:500"></span>
+  </div>
+
+  <!-- 7-day rolling metrics -->
+  <div class="metrics">
+    <div class="metric accent">
+      <div class="metric-label">Last 7 days</div>
+      <div class="metric-value" id="t-rev">—</div>
+      <div class="metric-sub">revenue</div>
+    </div>
+    <div class="metric">
+      <div class="metric-label">Still needed</div>
+      <div class="metric-value" id="t-gap">฿20,400</div>
+      <div class="metric-sub" id="t-gap-sub">to break even</div>
+    </div>
+    <div class="metric">
+      <div class="metric-label">Cars (7d)</div>
+      <div class="metric-value" id="t-cars">—</div>
+      <div class="metric-sub">this week</div>
+    </div>
+    <div class="metric">
+      <div class="metric-label">Status</div>
+      <div class="metric-value" id="t-status" style="font-size:14px;margin-top:4px">—</div>
+      <div class="metric-sub" id="t-status-sub">loads from log</div>
+    </div>
+  </div>
+
+  <div style="margin-bottom:16px">
+    <div style="display:flex;justify-content:space-between;font-size:12px;color:var(--text3);margin-bottom:6px">
+      <span>7-day break-even progress</span><span id="t-pct" style="font-weight:600;color:var(--text)">—</span>
+    </div>
+    <div class="prog-wrap" style="height:10px"><div class="prog-fill" id="t-bar" style="width:0%;background:var(--red)"></div></div>
+  </div>
+
+  <!-- P/L card — rolling 7 days -->
+  <div class="card" style="margin-top:4px" id="pl-card">
+    <div class="card-title">7-day profit / loss vs break-even</div>
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 0">
+      <div>
+        <div style="font-size:11px;color:var(--text3);font-weight:500;margin-bottom:4px">NET (ROLLING 7 DAYS)</div>
+        <div id="pl-amount" style="font-size:28px;font-weight:700;letter-spacing:-0.02em;color:var(--text3)">—</div>
+        <div id="pl-label" style="font-size:12px;color:var(--text3);margin-top:2px">vs ฿20,400 break-even</div>
+      </div>
+      <div style="text-align:right">
+        <div style="font-size:11px;color:var(--text3);font-weight:500;margin-bottom:4px">VS TARGET</div>
+        <div id="pl-delta" style="font-size:22px;font-weight:700;color:var(--text3)">—</div>
+        <div id="pl-status" style="font-size:11px;margin-top:2px;font-weight:600;color:var(--text3)">—</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Daily entry form -->
+  <div class="card">
+    <div class="card-title">Today's figures</div>
+    <div style="display:flex;flex-direction:column;gap:12px">
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+        <div>
+          <label style="font-size:12px;color:var(--text3);font-weight:500;display:block;margin-bottom:4px">Cash (฿)</label>
+          <input id="d-cash" type="number" min="0" placeholder="0" oninput="recalcDaily()"
+            style="width:100%;padding:10px 12px;border:1px solid var(--border);border-radius:var(--radius);font-size:16px;font-weight:600;background:var(--surface2);color:var(--text);font-family:inherit;text-align:right">
+        </div>
+        <div>
+          <label style="font-size:12px;color:var(--text3);font-weight:500;display:block;margin-bottom:4px">QR / PromptPay (฿)</label>
+          <input id="d-qr" type="number" min="0" placeholder="0" oninput="recalcDaily()"
+            style="width:100%;padding:10px 12px;border:1px solid var(--border);border-radius:var(--radius);font-size:16px;font-weight:600;background:var(--surface2);color:var(--text);font-family:inherit;text-align:right">
+        </div>
+      </div>
+
+      <div>
+        <label style="font-size:12px;color:var(--text3);font-weight:500;display:block;margin-bottom:4px">Cars washed</label>
+        <input id="d-cars" type="number" min="0" placeholder="0" oninput="recalcDaily()"
+          style="width:100%;padding:10px 12px;border:1px solid var(--border);border-radius:var(--radius);font-size:16px;font-weight:600;background:var(--surface2);color:var(--text);font-family:inherit;text-align:right">
+      </div>
+
+      <!-- Live daily total -->
+      <div style="background:var(--surface2);border-radius:var(--radius);padding:12px 14px;display:flex;justify-content:space-between;align-items:center">
+        <span style="font-size:13px;color:var(--text2)">Today's total</span>
+        <span id="d-total" style="font-size:20px;font-weight:700;color:var(--text)">฿0</span>
+      </div>
+
+    </div>
+    <button class="btn btn-primary btn-full" style="margin-top:14px" onclick="saveDay()">Save today's figures →</button>
+  </div>
+</div>
+
+<!-- LOG -->
+<div class="page" id="page-log">
+  <p class="page-title">Weekly log</p>
+  <div class="card" id="log-card">
+    <div class="card-title">Saved weeks</div>
+    <div id="log-body"><div class="empty-log">No weeks saved yet.<br>Enter data in the Tracker tab and tap "Save week to log."</div></div>
+  </div>
+
+</div>
+
+<!-- CLOSING -->
+<div class="page" id="page-close">
+  <p class="page-title">Closing up 🌙</p>
+  <div class="card">
+    <div class="card-title">Closing checklist — 6:00 PM
+      <button class="btn btn-ghost btn-sm" style="float:right;margin-top:-4px" onclick="resetList('cl')">Reset</button>
+    </div>
+    <div style="margin-bottom:10px">
+      <div class="prog-wrap"><div class="prog-fill" id="cl-prog" style="width:0%;background:var(--blue)"></div></div>
+      <div style="font-size:11px;color:var(--text3)" id="cl-label">0 of 9 complete</div>
+    </div>
+    <ul class="checklist" id="cl">
+      <li onclick="toggle(this,'cl','cl-prog','cl-label',9)"><div class="check-box"><svg viewBox="0 0 12 12"><polyline points="2,6 5,9 10,3"/></svg></div><div><div class="item-en">Complete daily log — cash + QR + car count</div><div class="item-th">กรอกบันทึกประจำวัน</div></div></li>
+      <li onclick="toggle(this,'cl','cl-prog','cl-label',9)"><div class="check-box"><svg viewBox="0 0 12 12"><polyline points="2,6 5,9 10,3"/></svg></div><div><div class="item-en">Screenshot QR total from banking app</div><div class="item-th">สกรีนช็อตยอด QR จากแอปธนาคาร</div></div></li>
+      <li onclick="toggle(this,'cl','cl-prog','cl-label',9)"><div class="check-box"><svg viewBox="0 0 12 12"><polyline points="2,6 5,9 10,3"/></svg></div><div><div class="item-en">Bank or secure the cash</div><div class="item-th">นำเงินฝากธนาคาร หรือเก็บในตู้</div></div></li>
+      <li onclick="toggle(this,'cl','cl-prog','cl-label',9)"><div class="check-box"><svg viewBox="0 0 12 12"><polyline points="2,6 5,9 10,3"/></svg></div><div><div class="item-en">Turn off machine at control unit</div><div class="item-th">ปิดเครื่องที่ชุดควบคุม</div></div></li>
+      <li onclick="toggle(this,'cl','cl-prog','cl-label',9)"><div class="check-box"><svg viewBox="0 0 12 12"><polyline points="2,6 5,9 10,3"/></svg></div><div><div class="item-en">Turn off water supply</div><div class="item-th">ปิดวาล์วน้ำ</div></div></li>
+      <li onclick="toggle(this,'cl','cl-prog','cl-label',9)"><div class="check-box"><svg viewBox="0 0 12 12"><polyline points="2,6 5,9 10,3"/></svg></div><div><div class="item-en">Rinse floor and open drain</div><div class="item-th">ล้างพื้น เปิดระบายน้ำ</div></div></li>
+      <li onclick="toggle(this,'cl','cl-prog','cl-label',9)"><div class="check-box"><svg viewBox="0 0 12 12"><polyline points="2,6 5,9 10,3"/></svg></div><div><div class="item-en">Hang towels to dry — separate colours</div><div class="item-th">แขวนผ้าให้แห้ง แยกสี</div></div></li>
+      <li onclick="toggle(this,'cl','cl-prog','cl-label',9)"><div class="check-box"><svg viewBox="0 0 12 12"><polyline points="2,6 5,9 10,3"/></svg></div><div><div class="item-en">Turn off main power</div><div class="item-th">ปิดไฟหลักที่ตู้ไฟ</div></div></li>
+      <li onclick="toggle(this,'cl','cl-prog','cl-label',9)"><div class="check-box"><svg viewBox="0 0 12 12"><polyline points="2,6 5,9 10,3"/></svg></div><div><div class="item-en">Lock and close shutter gate</div><div class="item-th">ล็อคและปิดประตูม้วน</div></div></li>
+    </ul>
+  </div>
+</div>
+
+<!-- EXPENSES -->
+<div class="page" id="page-expenses">
+  <p class="page-title">Log an expense</p>
+
+  <div class="card">
+    <div class="card-title">New expense</div>
+    <div style="display:flex;flex-direction:column;gap:12px">
+
+      <div>
+        <label style="font-size:12px;color:var(--text3);font-weight:500;display:block;margin-bottom:4px">Amount (฿)</label>
+        <input id="ex-amount" type="number" min="0" placeholder="0" style="width:100%;padding:10px 12px;border:1px solid var(--border);border-radius:var(--radius);font-size:16px;font-weight:600;background:var(--surface2);color:var(--text);font-family:inherit">
+      </div>
+
+      <div>
+        <label style="font-size:12px;color:var(--text3);font-weight:500;display:block;margin-bottom:4px">Category</label>
+        <select id="ex-category" style="width:100%;padding:10px 12px;border:1px solid var(--border);border-radius:var(--radius);font-size:14px;background:var(--surface2);color:var(--text)">
+          <option value="Rent">Rent</option>
+          <option value="Electricity">Electricity</option>
+          <option value="Staff wages">Staff wages</option>
+          <option value="Staff insurance">Staff insurance</option>
+          <option value="Chemicals">Chemicals &amp; supplies</option>
+          <option value="Marketing">Marketing</option>
+          <option value="Repairs">Repairs &amp; maintenance</option>
+          <option value="Petty cash">Petty cash</option>
+          <option value="Refund">Customer refund</option>
+          <option value="Other">Other</option>
+        </select>
+      </div>
+
+      <div>
+        <label style="font-size:12px;color:var(--text3);font-weight:500;display:block;margin-bottom:4px">Payment method</label>
+        <div style="display:flex;gap:8px">
+          <button class="pay-method-btn active" data-method="Cash" onclick="selectMethod(this)">Cash</button>
+          <button class="pay-method-btn" data-method="Bank transfer" onclick="selectMethod(this)">Bank transfer</button>
+          <button class="pay-method-btn" data-method="QR" onclick="selectMethod(this)">QR</button>
+        </div>
+      </div>
+
+      <div>
+        <label style="font-size:12px;color:var(--text3);font-weight:500;display:block;margin-bottom:4px">Note <span style="color:var(--text3);font-weight:400">(vendor, description — optional)</span></label>
+        <input id="ex-note" type="text" placeholder="e.g. Chemical supplier — monthly order" style="width:100%;padding:10px 12px;border:1px solid var(--border);border-radius:var(--radius);font-size:14px;background:var(--surface2);color:var(--text);font-family:inherit">
+      </div>
+
+    </div>
+    <button class="btn btn-primary btn-full" style="margin-top:16px" onclick="saveExpense()">Save expense →</button>
+  </div>
+
+  <!-- Monthly summary -->
+  <div class="card" style="margin-top:4px">
+    <div class="card-title">This month</div>
+    <div id="exp-summary">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px">
+        <div class="metric"><div class="metric-label">Total spent</div><div class="metric-value" id="exp-total">฿0</div></div>
+        <div class="metric"><div class="metric-label">Entries</div><div class="metric-value" id="exp-count">0</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Monthly cost reference -->
+  <div class="card">
+    <div class="card-title">Monthly cost budget</div>
+    <div class="row"><span class="row-label">Rent (Dynasty)</span><span class="row-value">฿22,000</span></div>
+    <div class="row"><span class="row-label">Electricity</span><span class="row-value">฿18,000</span></div>
+    <div class="row"><span class="row-label">Staff wages (4 × ฿400 × 26d)</span><span class="row-value">฿41,600</span></div>
+    <div class="row"><span class="row-label">Staff insurance</span><span class="row-value">฿2,200</span></div>
+    <div class="row"><span class="row-label">Signage / WiFi</span><span class="row-value">฿875</span></div>
+    <div class="row"><span class="row-label">Chemicals &amp; supplies</span><span class="row-value unconfirmed">฿? — confirm</span></div>
+    <div class="row"><span class="row-label">Marketing</span><span class="row-value">฿2,000</span></div>
+    <div class="row"><span class="row-label">Contingency / repairs</span><span class="row-value">฿3,000</span></div>
+    <div class="row" style="font-weight:600;border-top:1px solid var(--border);margin-top:4px;padding-top:12px"><span>Known monthly total</span><span>฿89,675</span></div>
+  </div>
+
+  <!-- Recent expenses -->
+  <div class="card">
+    <div class="card-title">Recent expenses</div>
+    <div id="exp-log-body"><div class="empty-log">No expenses logged yet.</div></div>
+  </div>
+</div>
+
+<!-- CONTACTS -->
+<div class="page" id="page-contacts">
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+    <p class="page-title" style="margin:0">Contacts</p>
+    <button class="btn btn-primary btn-sm" onclick="openAddContact()">+ Add</button>
+  </div>
+
+  <!-- Emergency always shown static -->
+  <div class="card">
+    <div class="card-title">Emergency</div>
+    <div class="contact-card">
+      <div class="contact-avatar">🚨</div>
+      <div><div class="contact-name">Police / Ambulance</div><div class="contact-role">Emergency services</div></div>
+      <a class="contact-phone" href="tel:191">191 / 1669</a>
+    </div>
+  </div>
+
+  <!-- Dynamic contacts by group -->
+  <div id="contacts-list"></div>
+
+  <!-- Add / Edit modal overlay -->
+  <div id="contact-modal" style="display:none;position:fixed;inset:0;background:rgba(15,25,35,0.55);z-index:200;align-items:flex-end;justify-content:center">
+    <div style="background:var(--surface);border-radius:var(--radius-lg) var(--radius-lg) 0 0;padding:24px 20px 36px;width:100%;max-width:640px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px">
+        <span style="font-size:16px;font-weight:600" id="modal-title">Add contact</span>
+        <button onclick="closeModal()" style="background:none;border:none;font-size:22px;color:var(--text3);cursor:pointer;line-height:1">×</button>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:12px">
+        <div>
+          <label style="font-size:12px;color:var(--text3);font-weight:500;display:block;margin-bottom:4px">Name</label>
+          <input id="cf-name" type="text" placeholder="e.g. Machine mechanic" style="width:100%;padding:10px 12px;border:1px solid var(--border);border-radius:var(--radius);font-size:14px;background:var(--surface2);color:var(--text);font-family:inherit">
+        </div>
+        <div>
+          <label style="font-size:12px;color:var(--text3);font-weight:500;display:block;margin-bottom:4px">Role / note</label>
+          <input id="cf-role" type="text" placeholder="e.g. Autobot service contact" style="width:100%;padding:10px 12px;border:1px solid var(--border);border-radius:var(--radius);font-size:14px;background:var(--surface2);color:var(--text);font-family:inherit">
+        </div>
+        <div>
+          <label style="font-size:12px;color:var(--text3);font-weight:500;display:block;margin-bottom:4px">Phone number</label>
+          <input id="cf-phone" type="tel" placeholder="e.g. 081-234-5678" style="width:100%;padding:10px 12px;border:1px solid var(--border);border-radius:var(--radius);font-size:14px;background:var(--surface2);color:var(--text);font-family:inherit">
+        </div>
+        <div>
+          <label style="font-size:12px;color:var(--text3);font-weight:500;display:block;margin-bottom:4px">Group</label>
+          <select id="cf-group" style="width:100%;padding:10px 12px;border:1px solid var(--border);border-radius:var(--radius);font-size:14px;background:var(--surface2);color:var(--text)">
+            <option value="Operations">Operations</option>
+            <option value="Admin">Admin</option>
+            <option value="Owners">Owners</option>
+            <option value="Other">Other</option>
+          </select>
+        </div>
+      </div>
+      <div style="display:flex;gap:10px;margin-top:20px">
+        <button id="modal-delete-btn" class="btn btn-ghost" style="color:var(--red);border-color:var(--red-light);display:none" onclick="deleteContact()">Delete</button>
+        <button class="btn btn-primary" style="flex:1" onclick="saveContact()">Save contact</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+  // Date
+  const now = new Date();
+  const days = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+  const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  document.getElementById('header-date').textContent = days[now.getDay()]+', '+now.getDate()+' '+months[now.getMonth()];
+  document.getElementById('open-today-date').textContent = now.getDate()+' '+months[now.getMonth()];
+  document.getElementById('open-today-day').textContent = days[now.getDay()];
+
+  // Nav
+  function showPage(id) {
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+    document.getElementById('page-'+id).classList.add('active');
+    event.target.classList.add('active');
+  }
+
+  // Checklist
+  function toggle(li, listId, progId, labelId, total) {
+    li.classList.toggle('done');
+    const done = document.getElementById(listId).querySelectorAll('.done').length;
+    const pct = Math.round(done/total*100);
+    document.getElementById(progId).style.width = pct+'%';
+    document.getElementById(labelId).textContent = done+' of '+total+' complete';
+  }
+  function resetList(listId) {
+    const list = document.getElementById(listId);
+    list.querySelectorAll('li').forEach(li => li.classList.remove('done'));
+    const isOpen = listId === 'ol';
+    const progId = isOpen ? 'ol-prog' : 'cl-prog';
+    const labelId = isOpen ? 'ol-label' : 'cl-label';
+    const total = isOpen ? 10 : 9;
+    document.getElementById(progId).style.width = '0%';
+    document.getElementById(labelId).textContent = '0 of '+total+' complete';
+  }
+
+  // Tracker — daily mode
+  const BREAKEVEN = 20400;
+
+  // Set today's date in header
+  const now2 = new Date();
+  const tdEl = document.getElementById('tracker-date');
+  if (tdEl) tdEl.textContent = now2.getDate()+' '+months[now2.getMonth()]+' '+now2.getFullYear();
+
+  function recalcDaily() {
+    const cash  = parseFloat(document.getElementById('d-cash').value)||0;
+    const qr    = parseFloat(document.getElementById('d-qr').value)||0;
+    const total = cash + qr;
+    document.getElementById('d-total').textContent = '฿'+Math.round(total).toLocaleString();
+  }
+
+  function updateRollingMetrics(logRows) {
+    // Sum last 7 entries from the log
+    const recent = (logRows || []).slice(0, 7);
+    const rev7  = recent.reduce((s,r) => s + (parseInt(r.revenue)||0), 0);
+    const cars7 = recent.reduce((s,r) => s + (parseInt(r.cars)||0), 0);
+    const gap   = Math.max(0, BREAKEVEN - rev7);
+    const pct   = Math.min(100, Math.round(rev7/BREAKEVEN*100));
+
+    document.getElementById('t-rev').textContent  = rev7 ? '฿'+rev7.toLocaleString() : '—';
+    document.getElementById('t-gap').textContent  = '฿'+gap.toLocaleString();
+    document.getElementById('t-cars').textContent = cars7 || '—';
+    document.getElementById('t-pct').textContent  = rev7 ? pct+'%' : '—';
+
+    const bar = document.getElementById('t-bar');
+    bar.style.width      = pct+'%';
+    bar.style.background = pct>=100?'var(--green)':pct>=60?'var(--amber)':'var(--red)';
+
+    const st = document.getElementById('t-status');
+    if (!rev7) { st.textContent='—'; st.className='metric-value'; document.getElementById('t-status-sub').textContent='loads from log'; }
+    else if (pct>=100) { st.innerHTML='<span class="status-badge status-good">On track ✓</span>'; document.getElementById('t-status-sub').textContent='Break-even reached'; }
+    else if (pct>=70)  { st.innerHTML='<span class="status-badge status-warn">Nearly there</span>'; document.getElementById('t-status-sub').textContent=pct+'% of target'; }
+    else               { st.innerHTML='<span class="status-badge status-bad">Behind</span>'; document.getElementById('t-status-sub').textContent=pct+'% of target'; }
+
+    // P/L card
+    const net      = Math.round(rev7 - BREAKEVEN);
+    const deltaPct = rev7 ? Math.round((rev7 - BREAKEVEN)/BREAKEVEN*100) : 0;
+    const plAmount = document.getElementById('pl-amount');
+    const plDelta  = document.getElementById('pl-delta');
+    const plStatus = document.getElementById('pl-status');
+    const plLabel  = document.getElementById('pl-label');
+    if (!rev7) {
+      plAmount.textContent='—'; plAmount.style.color='var(--text3)';
+      plDelta.textContent='—';  plDelta.style.color='var(--text3)';
+      plStatus.textContent='—'; plStatus.style.color='var(--text3)';
+    } else {
+      const isProfit = net >= 0;
+      plAmount.textContent = (isProfit?'+':'')+'฿'+Math.abs(net).toLocaleString();
+      plAmount.style.color = isProfit?'var(--green)':'var(--red)';
+      plDelta.textContent  = (deltaPct>=0?'+':'')+deltaPct+'%';
+      plDelta.style.color  = isProfit?'var(--green)':'var(--red)';
+      plStatus.textContent = isProfit?'▲ Above break-even':'▼ Below break-even';
+      plStatus.style.color = isProfit?'var(--green)':'var(--red)';
+      plLabel.textContent  = isProfit
+        ? '฿'+net.toLocaleString()+' above ฿'+BREAKEVEN.toLocaleString()+' target'
+        : '฿'+Math.abs(net).toLocaleString()+' short of ฿'+BREAKEVEN.toLocaleString()+' target';
+    }
+  }
+
+  // ── GOOGLE SHEETS API ─────────────────────────────────
+  const API = 'https://script.google.com/macros/s/AKfycbzqUPtaE-1I9y59zL9lF-5KOgrm2aXIRe14zqy-1RZ6trWPhvpEEhSNZWW3jCMouLAI/exec';
+  function api(params) {
+    return new Promise((resolve, reject) => {
+      const cbName = 'cb_' + Date.now() + '_' + Math.round(Math.random()*9999);
+      const script = document.createElement('script');
+      const timer = setTimeout(() => {
+        delete window[cbName]; script.remove(); reject(new Error('timeout'));
+      }, 12000);
+      window[cbName] = function(data) {
+        clearTimeout(timer); delete window[cbName]; script.remove(); resolve(data);
+      };
+      params.callback = cbName;
+      script.src = API + '?' + Object.entries(params).map(([k,v]) => k+'='+encodeURIComponent(v)).join('&');
+      script.onerror = () => { clearTimeout(timer); delete window[cbName]; script.remove(); reject(new Error('load error')); };
+      document.head.appendChild(script);
+    });
+  }
+  function setLoading(el, yes) {
+    if (el) el.style.opacity = yes ? '0.5' : '1';
+  }
+
+  // ── TOAST ─────────────────────────────────────────────
+  function showToast(msg) {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    setTimeout(()=>t.classList.remove('show'), 2800);
+  }
+
+  // ── WEEKLY LOG ────────────────────────────────────────
+  function formatDate(raw) {
+    if (!raw) return '—';
+    const s = String(raw);
+    // ISO timestamp from saved_at column e.g. 2026-06-14T17:00:00.000Z
+    if (s.includes('T')) {
+      const d = new Date(s);
+      const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+      return d.getDate()+' '+months[d.getMonth()]+' '+d.getFullYear();
+    }
+    return s;
+  }
+
+  function renderLog(rows) {
+    updateRollingMetrics(rows);
+    const body = document.getElementById('log-body');
+    if (!rows || !rows.length) {
+      body.innerHTML = '<div class="empty-log">No days logged yet.<br>Enter today&#39;s figures in the Tracker tab.</div>';
+      return;
+    }
+    let html = '<table class="log-table"><thead><tr><th>Date</th><th>Cars</th><th>Cash</th><th>QR</th><th>Total</th><th>vs daily</th><th></th></tr></thead><tbody>';
+    rows.forEach((l, idx) => {
+      const rev = parseInt(l.revenue)||0;
+      const dailyTarget = Math.round(BREAKEVEN/7);
+      const pct = Math.min(100, Math.round(rev/dailyTarget*100));
+      const cls = pct>=100?'status-good':pct>=70?'status-warn':'status-bad';
+      const dateStr = formatDate(l.saved_at || l.date);
+      html += `<tr>
+        <td>${dateStr}</td>
+        <td>${l.cars}</td>
+        <td>฿${parseInt(l.cash||0).toLocaleString()}</td>
+        <td>฿${parseInt(l.qr||0).toLocaleString()}</td>
+        <td class="total-cell">฿${rev.toLocaleString()}</td>
+        <td><span class="status-badge ${cls}">${pct}%</span></td>
+        <td><button onclick="deleteWeek(${idx})" style="background:none;border:none;cursor:pointer;color:var(--text3);font-size:16px;padding:2px 6px;border-radius:4px" title="Delete this week">×</button></td>
+      </tr>`;
+    });
+    html += '</tbody></table>';
+    body.innerHTML = html;
+  }
+
+  function loadLog() {
+    const body = document.getElementById('log-body');
+    body.innerHTML = '<div class="empty-log">Loading…</div>';
+    api({ action: 'getLog' }).then(r => {
+      if (r.error) { body.innerHTML = '<div class="empty-log">Error loading log.</div>'; updateRollingMetrics([]); return; }
+      renderLog(r.log);
+    }).catch(() => { body.innerHTML = '<div class="empty-log">Could not connect. Check internet.</div>'; updateRollingMetrics([]); });
+  }
+
+  function saveDay() {
+    const cash = parseFloat(document.getElementById('d-cash').value)||0;
+    const qr   = parseFloat(document.getElementById('d-qr').value)||0;
+    const cars = parseFloat(document.getElementById('d-cars').value)||0;
+    const rev  = cash + qr;
+    if (rev===0 && cars===0) { showToast('Enter at least one figure'); return; }
+    const d = new Date();
+    const entry = {
+      date: d.getDate()+' '+months[d.getMonth()]+' '+d.getFullYear(),
+      rev: Math.round(rev), cash: Math.round(cash), qr: Math.round(qr), cars: Math.round(cars)
+    };
+    const btn = document.querySelector('#page-tracker .btn-primary');
+    setLoading(btn, true); btn.textContent = 'Saving…';
+    api({ action: 'saveWeek', week: JSON.stringify(entry) }).then(r => {
+      setLoading(btn, false); btn.textContent = 'Save today\'s figures \u2192';
+      if (r.error) { showToast('Error saving: '+r.error); return; }
+      showToast('Day saved to Google Sheet ✓');
+      document.getElementById('d-cash').value = '';
+      document.getElementById('d-qr').value = '';
+      document.getElementById('d-cars').value = '';
+      document.getElementById('d-total').textContent = '฿0';
+      loadLog();
+    }).catch(() => { setLoading(btn, false); btn.textContent = 'Save today\'s figures \u2192'; showToast('No connection — try again'); });
+  }
+
+  let logCache = [];
+
+  function deleteWeek(idx) {
+    if (!confirm('Delete this week from the log?')) return;
+    api({ action: 'deleteWeek', idx: idx }).then(r => {
+      if (r.error) { showToast('Error: '+r.error); return; }
+      showToast('Week deleted');
+      loadLog();
+    }).catch(() => showToast('No connection — try again'));
+  }
+
+  function clearLog() {
+    if (!confirm('Clear all log data from Google Sheet? This cannot be undone.')) return;
+    api({ action: 'clearLog' }).then(r => {
+      if (r.error) { showToast('Error: '+r.error); return; }
+      showToast('Log cleared');
+      loadLog();
+    });
+  }
+
+  // ── CONTACTS ──────────────────────────────────────────
+  let contactsCache = [];
+
+  function initials(name) {
+    return String(name).split(' ').map(w=>w[0]).join('').toUpperCase().slice(0,2);
+  }
+  function avatarColor(group) {
+    if (group==='Operations') return 'background:#e8f1fb;color:#1a6bcc';
+    if (group==='Admin') return 'background:#e6f7f2;color:#0d9e6e';
+    if (group==='Owners') return 'background:#fdf3e0;color:#c47f17';
+    return 'background:#f0eeff;color:#5b4db3';
+  }
+
+  function renderContacts(contacts) {
+    // Normalise keys to lowercase (handles both 'Name' and 'name' from Sheet)
+    contacts = contacts.map(c => {
+      const o = {};
+      Object.keys(c).forEach(k => o[k.toLowerCase()] = c[k]);
+      return o;
+    });
+    contactsCache = contacts;
+    const groups = ['Operations','Admin','Owners','Other'];
+    let html = '';
+    groups.forEach(g => {
+      const gc = contacts.filter(c => String(c.group)===g);
+      if (!gc.length) return;
+      html += `<div class="card"><div class="card-title">${g}</div>`;
+      gc.forEach(c => {
+        const hasPhone = c.phone && String(c.phone).trim();
+        const phoneHtml = hasPhone
+          ? `<a class="contact-phone" href="tel:${String(c.phone).replace(/[^0-9+]/g,'')}" onclick="event.stopPropagation()">${c.phone}</a>`
+          : `<span class="contact-phone unconfirmed">TBC</span>`;
+        html += `<div class="contact-card" onclick="openEditContact('${c.id}')" style="cursor:pointer">
+          <div class="contact-avatar" style="${avatarColor(c.group)}">${initials(c.name)}</div>
+          <div style="flex:1;min-width:0"><div class="contact-name">${c.name}</div><div class="contact-role">${c.role||''}</div></div>
+          ${phoneHtml}
+          <span style="font-size:18px;color:var(--text3);margin-left:8px;flex-shrink:0">›</span>
+        </div>`;
+      });
+      html += '</div>';
+    });
+    if (!contacts.length) html = '<div class="empty-log" style="margin-top:20px">No contacts yet. Tap + Add to create one.</div>';
+    document.getElementById('contacts-list').innerHTML = html;
+  }
+
+  function loadContacts() {
+    document.getElementById('contacts-list').innerHTML = '<div class="empty-log">Loading…</div>';
+    api({ action: 'getContacts' }).then(r => {
+      if (r.error) { document.getElementById('contacts-list').innerHTML = '<div class="empty-log">Error loading contacts.</div>'; return; }
+      renderContacts(r.contacts);
+    }).catch(() => { document.getElementById('contacts-list').innerHTML = '<div class="empty-log">Could not connect. Check internet.</div>'; });
+  }
+
+  let editingId = null;
+
+  function openAddContact() {
+    editingId = null;
+    document.getElementById('modal-title').textContent = 'Add contact';
+    document.getElementById('cf-name').value = '';
+    document.getElementById('cf-role').value = '';
+    document.getElementById('cf-phone').value = '';
+    document.getElementById('cf-group').value = 'Operations';
+    document.getElementById('modal-delete-btn').style.display = 'none';
+    document.getElementById('contact-modal').style.display = 'flex';
+  }
+
+  function openEditContact(id) {
+    const c = contactsCache.find(x => String(x.id) === String(id));
+    if (!c) return;
+    editingId = id;
+    document.getElementById('modal-title').textContent = 'Edit contact';
+    document.getElementById('cf-name').value = c.name || '';
+    document.getElementById('cf-role').value = c.role || '';
+    document.getElementById('cf-phone').value = c.phone || '';
+    document.getElementById('cf-group').value = c.group || 'Operations';
+    document.getElementById('modal-delete-btn').style.display = 'inline-flex';
+    document.getElementById('contact-modal').style.display = 'flex';
+  }
+
+  function closeModal() {
+    document.getElementById('contact-modal').style.display = 'none';
+  }
+
+  function saveContact() {
+    const name = document.getElementById('cf-name').value.trim();
+    if (!name) { showToast('Name is required'); return; }
+    const contact = {
+      id: editingId || '',
+      name,
+      role: document.getElementById('cf-role').value.trim(),
+      phone: document.getElementById('cf-phone').value.trim(),
+      group: document.getElementById('cf-group').value
+    };
+    const saveBtn = document.querySelector('#contact-modal .btn-primary');
+    saveBtn.textContent = 'Saving…';
+    saveBtn.disabled = true;
+    api({ action: 'saveContact', contact: JSON.stringify(contact) }).then(r => {
+      saveBtn.textContent = 'Save contact';
+      saveBtn.disabled = false;
+      if (r.error) { showToast('Error: '+r.error); return; }
+      closeModal();
+      showToast(editingId ? 'Contact updated ✓' : 'Contact added ✓');
+      loadContacts();
+    }).catch(() => { saveBtn.textContent = 'Save contact'; saveBtn.disabled = false; showToast('No connection — try again'); });
+  }
+
+  function deleteContact() {
+    if (!confirm('Delete this contact?')) return;
+    api({ action: 'deleteContact', id: String(editingId) }).then(r => {
+      if (r.error) { showToast('Error: '+r.error); return; }
+      closeModal();
+      showToast('Contact deleted');
+      loadContacts();
+    }).catch(() => showToast('No connection — try again'));
+  }
+
+  document.getElementById('contact-modal').addEventListener('click', function(e) {
+    if (e.target === this) closeModal();
+  });
+
+  // ── INIT ── (data loading moved to showApp() after auth)
+
+  // ── EXPENSES ──────────────────────────────────────────
+  let selectedMethod = 'Cash';
+
+  function selectMethod(btn) {
+    document.querySelectorAll('.pay-method-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    selectedMethod = btn.dataset.method;
+  }
+
+  function saveExpense() {
+    const amount = parseFloat(document.getElementById('ex-amount').value);
+    if (!amount || amount <= 0) { showToast('Enter an amount'); return; }
+    const d = new Date();
+    const expense = {
+      date: d.getDate()+' '+months[d.getMonth()]+' '+d.getFullYear(),
+      amount: Math.round(amount),
+      category: document.getElementById('ex-category').value,
+      method: selectedMethod,
+      note: document.getElementById('ex-note').value.trim()
+    };
+    const btn = document.querySelector('#page-expenses .btn-primary');
+    btn.textContent = 'Saving…'; btn.disabled = true;
+    api({ action: 'saveExpense', expense: JSON.stringify(expense) }).then(r => {
+      btn.textContent = 'Save expense →'; btn.disabled = false;
+      if (r.error) { showToast('Error: '+r.error); return; }
+      showToast('Expense saved ✓');
+      document.getElementById('ex-amount').value = '';
+      document.getElementById('ex-note').value = '';
+      loadExpenses();
+    }).catch(() => { btn.textContent = 'Save expense →'; btn.disabled = false; showToast('No connection — try again'); });
+  }
+
+  function loadExpenses() {
+    api({ action: 'getExpenses' }).then(r => {
+      if (r.error) return;
+      renderExpenses(r.expenses);
+    }).catch(() => {});
+  }
+
+  function renderExpenses(expenses) {
+    const body = document.getElementById('exp-log-body');
+    if (!expenses || !expenses.length) {
+      body.innerHTML = '<div class="empty-log">No expenses logged yet.</div>';
+      document.getElementById('exp-total').textContent = '฿0';
+      document.getElementById('exp-count').textContent = '0';
+      return;
+    }
+    // Filter to current month for summary
+    const now = new Date();
+    const thisMonth = expenses.filter(e => {
+      const parts = String(e.date).split(' ');
+      if (parts.length < 3) return false;
+      const m = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'].indexOf(parts[1]);
+      const y = parseInt(parts[2]);
+      return m === now.getMonth() && y === now.getFullYear();
+    });
+    const total = thisMonth.reduce((s,e) => s + (parseInt(e.amount)||0), 0);
+    document.getElementById('exp-total').textContent = '฿'+total.toLocaleString();
+    document.getElementById('exp-count').textContent = thisMonth.length;
+
+    // Show last 20 expenses
+    const recent = expenses.slice(0, 20);
+    let html = '';
+    recent.forEach((e, idx) => {
+      html += `<div class="exp-row">
+        <div>
+          <div class="exp-cat">${e.category}</div>
+          <div class="exp-meta">${e.date} · ${e.method}${e.note ? ' · '+e.note : ''}</div>
+        </div>
+        <div style="display:flex;align-items:center">
+          <span class="exp-amount">฿${parseInt(e.amount||0).toLocaleString()}</span>
+          <button class="exp-del" onclick="deleteExpense(${idx})" title="Delete">×</button>
+        </div>
+      </div>`;
+    });
+    body.innerHTML = html;
+  }
+
+  function deleteExpense(idx) {
+    if (!confirm('Delete this expense?')) return;
+    api({ action: 'deleteExpense', idx: idx }).then(r => {
+      if (r.error) { showToast('Error: '+r.error); return; }
+      showToast('Deleted');
+      loadExpenses();
+    }).catch(() => showToast('No connection — try again'));
+  }
+
+  // ── GOOGLE OAUTH ──────────────────────────────────────
+  const ALLOWED_EMAILS = ["autoblue.chiangmai@gmail.com", "bt.pratt@gmail.com"];
+
+  function handleGoogleSignIn(response) {
+    const parts = response.credential.split('.');
+    const payload = JSON.parse(atob(parts[1] + '=='.slice(0, (4 - parts[1].length % 4) % 4)));
+    const email = payload.email;
+    if (ALLOWED_EMAILS.map(e => e.toLowerCase()).includes(email.toLowerCase())) {
+      sessionStorage.setItem('ab_user', JSON.stringify({ email: email, name: payload.name, picture: payload.picture }));
+      showApp(payload);
+    } else {
+      document.getElementById('auth-error').style.display = 'block';
+    }
+  }
+
+  function showApp(user) {
+    document.getElementById('auth-overlay').classList.add('hidden');
+    const userBar = document.getElementById('auth-user');
+    userBar.style.display = 'flex';
+    const avatar = document.getElementById('auth-avatar');
+    if (user.picture) { avatar.src = user.picture; }
+    avatar.title = (user.name || '') + ' (' + (user.email || '') + ')';
+    loadContacts();
+    loadLog();
+    loadExpenses();
+  }
+
+  function signOut() {
+    sessionStorage.removeItem('ab_user');
+    location.reload();
+  }
+
+  // Check for existing session
+  (function initAuth() {
+    const stored = sessionStorage.getItem('ab_user');
+    if (stored) {
+      try {
+        const user = JSON.parse(stored);
+        if (ALLOWED_EMAILS.map(e => e.toLowerCase()).includes((user.email||'').toLowerCase())) {
+          showApp(user);
+          return;
+        }
+      } catch(e) {}
+    }
+    // No valid session — overlay stays visible
+  })();
+
+</script>
+</body>
+</html>
